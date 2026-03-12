@@ -30,12 +30,12 @@ export function VideoCard({ video }: VideoCardProps) {
     <div
       className="group flex w-full flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card-bg)] text-left shadow-sm transition hover:border-[var(--accent)]/40 hover:shadow-md focus-within:ring-2 focus-within:ring-[var(--accent)]/50"
     >
-      <div className="relative aspect-video w-full bg-[var(--muted)]/20">
+      <div className="relative aspect-video w-full shrink-0 overflow-hidden bg-[var(--muted)]/20">
         {!thumbError ? (
           <img
             src={`/api/drive/thumbnail?id=${video.id}`}
             alt=""
-            className="h-full w-full object-cover transition group-hover:scale-[1.02]"
+            className="absolute inset-0 h-full w-full object-cover object-center transition group-hover:scale-[1.02]"
             onError={() => setThumbError(true)}
           />
         ) : (

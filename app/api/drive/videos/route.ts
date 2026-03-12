@@ -1,3 +1,4 @@
+import { getDriveFoldersConfig, getAllFolderIdsRecursive } from "@/lib/drive";
 import { google } from "googleapis";
 import { NextResponse } from "next/server";
 
@@ -29,37 +30,66 @@ function getServiceAccountClient() {
   });
 }
 
-export async function GET() {
-  const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
-  if (!folderId) {
+export async function GET(request: Request) {
+  const folders = getDriveFoldersConfig();
+  if (folders.length === 0) {
     return NextResponse.json(
-      { error: "GOOGLE_DRIVE_FOLDER_ID no configurado" },
+      { error: "No hay carpetas configuradas (GOOGLE_DRIVE_FOLDER_ID o GOOGLE_DRIVE_FOLDERS)" },
       { status: 500 }
     );
   }
+
+  const { searchParams } = new URL(request.url);
+  const folderIdParam = searchParams.get("folderId");
+  const folderIdsToQuery = folderIdParam
+    ? [folderIdParam]
+    : await getAllFolderIdsRecursive(folders.map((f) => f.id));
 
   try {
     const auth = getServiceAccountClient();
     const drive = google.drive({ version: "v3", auth });
 
-    const { data } = await drive.files.list({
-      q: `'${folderId}' in parents and (${VIDEO_MIME_TYPES.map((m) => `mimeType='${m}'`).join(" or ")}) and trashed = false`,
-      fields: "files(id, name, mimeType, size, createdTime, thumbnailLink, webContentLink)",
-      orderBy: "createdTime desc",
-      pageSize: 50,
+    const allFiles: Array<{
+      id: string;
+      name: string;
+      mimeType?: string | null;
+      size?: string;
+      createdTime?: string;
+      thumbnailLink?: string;
+      webContentLink?: string;
+      folderId?: string;
+    }> = [];
+
+    for (const folderId of folderIdsToQuery) {
+      const { data } = await drive.files.list({
+        q: `'${folderId}' in parents and (${VIDEO_MIME_TYPES.map((m) => `mimeType='${m}'`).join(" or ")}) and trashed = false`,
+        fields: "files(id, name, mimeType, size, createdTime, thumbnailLink, webContentLink)",
+        orderBy: "createdTime desc",
+        pageSize: 100,
+      });
+
+      const files = (data.files || []).map((f) => ({
+        id: f.id,
+        name: f.name,
+        mimeType: f.mimeType,
+        size: f.size,
+        createdTime: f.createdTime,
+        thumbnailLink: f.thumbnailLink,
+        webContentLink: f.webContentLink,
+        folderId,
+      }));
+      allFiles.push(...files);
+    }
+
+    allFiles.sort(
+      (a, b) =>
+        (b.createdTime ? new Date(b.createdTime).getTime() : 0) -
+        (a.createdTime ? new Date(a.createdTime).getTime() : 0)
+    );
+
+    return NextResponse.json({
+      files: allFiles.map(({ folderId: _, ...f }) => f),
     });
-
-    const files = (data.files || []).map((f) => ({
-      id: f.id,
-      name: f.name,
-      mimeType: f.mimeType,
-      size: f.size,
-      createdTime: f.createdTime,
-      thumbnailLink: f.thumbnailLink,
-      webContentLink: f.webContentLink,
-    }));
-
-    return NextResponse.json({ files });
   } catch (err) {
     console.error("Drive API error:", err);
     return NextResponse.json(

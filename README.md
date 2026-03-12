@@ -6,7 +6,7 @@ App en React y Next.js para reproducir videos desde una carpeta de tu Google Dri
 
 - No requiere que los usuarios inicien sesión
 - La app usa una **cuenta de servicio** de Google para leer la carpeta
-- Listado de videos de una carpeta de Drive configurada
+- Listado de videos de una o varias carpetas de Drive (organizadas en el sidebar)
 - Reproducción en modal con player HTML5
 - Interfaz limpia tipo Loom: sidebar, grid de tarjetas, reproductor en modal
 
@@ -21,7 +21,8 @@ cp .env.local.example .env.local
 ```
 
 - **GOOGLE_SERVICE_ACCOUNT_CLIENT_EMAIL** y **GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY**: credenciales de la cuenta de servicio (ver abajo).
-- **GOOGLE_DRIVE_FOLDER_ID**: ID de la carpeta de Drive donde están los videos. Lo ves en la URL al abrir la carpeta: `https://drive.google.com/drive/folders/ESTE_ES_EL_ID`
+- **GOOGLE_DRIVE_FOLDER_ID**: ID de una sola carpeta de Drive (opción clásica). Lo ves en la URL al abrir la carpeta: `https://drive.google.com/drive/folders/ESTE_ES_EL_ID`
+- **GOOGLE_DRIVE_FOLDERS** (opcional): Varias carpetas con nombre para la UI. Formato JSON: `[{"id":"id-carpeta-1","name":"Tutoriales"},{"id":"id-carpeta-2","name":"Grabaciones"}]`. Si lo defines, se ignora `GOOGLE_DRIVE_FOLDER_ID` y en el sidebar aparecerán las carpetas organizadas (incluida la opción "Todos").
 
 ### 2. Google Cloud Console (cuenta de servicio)
 
@@ -33,11 +34,11 @@ cp .env.local.example .env.local
    - `GOOGLE_SERVICE_ACCOUNT_CLIENT_EMAIL`
    - `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY` (sustituyendo saltos de línea por `\n` como en `.env.local.example`).
 
-### 3. Carpeta de Drive
+### 3. Carpeta(s) de Drive
 
-- Crea una carpeta en Google Drive (o usa una existente) y sube ahí los videos.
-- Comparte la carpeta con el **email de la cuenta de servicio** como “Lector”.
-- Abre la carpeta en el navegador y copia el ID de la URL en `GOOGLE_DRIVE_FOLDER_ID`.
+- Crea una o varias carpetas en Google Drive y sube ahí los videos.
+- Comparte cada carpeta con el **email de la cuenta de servicio** como “Lector”.
+- Abre cada carpeta en el navegador y copia el ID de la URL en `GOOGLE_DRIVE_FOLDER_ID` (una carpeta) o en `GOOGLE_DRIVE_FOLDERS` como JSON con `id` y `name` para varias (el orden en el array es el que verás en el sidebar).
 
 ## Desarrollo
 

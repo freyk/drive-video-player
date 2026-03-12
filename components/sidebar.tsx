@@ -1,42 +1,235 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { signOut } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-interface SidebarProps {
-  user?: { name?: string | null; email?: string | null; image?: string | null };
+export interface DriveFolder {
+  id: string;
+  name: string;
 }
 
-function NavContent({ onNavigate }: { onNavigate?: () => void }) {
+interface SidebarProps {
+  user?: { name?: string | null; email?: string | null; image?: string | null };
+  /** ID de la carpeta seleccionada (desde la URL ?folder=...) */
+  currentFolderId?: string | null;
+}
+
+const FOLDER_ICON = (
+  <svg
+    className="h-5 w-5 shrink-0 text-[var(--muted)]"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+    />
+  </svg>
+);
+
+function FolderTreeItem({
+  folder,
+  depth,
+  currentFolderId,
+  expandedIds,
+  childrenMap,
+  loadingIds,
+  onToggleExpand,
+  onNavigate,
+}: {
+  folder: DriveFolder;
+  depth: number;
+  currentFolderId: string | null;
+  expandedIds: Set<string>;
+  childrenMap: Record<string, DriveFolder[]>;
+  loadingIds: Set<string>;
+  onToggleExpand: (folderId: string) => void;
+  onNavigate?: () => void;
+}) {
+  const isExpanded = expandedIds.has(folder.id);
+  const children = childrenMap[folder.id];
+  const isLoading = loadingIds.has(folder.id);
+  const showExpand = children === undefined || children.length > 0;
+
+  const linkClass = (active: boolean) =>
+    `flex min-h-[44px] flex-1 min-w-0 items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium transition-colors ${
+      active
+        ? "bg-[var(--accent)]/15 text-[var(--accent)]"
+        : "text-[var(--foreground)] hover:bg-[var(--hover)]"
+    }`;
+
   return (
-    <Link
-      href="/"
-      onClick={onNavigate}
-      className="flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--hover)]"
-    >
-      <svg
-        className="h-5 w-5 shrink-0 text-[var(--muted)]"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
+    <div className="flex flex-col gap-0.5">
+      <div
+        className="flex items-center gap-0.5"
+        style={{ paddingLeft: depth * 12 }}
       >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-        />
-      </svg>
-      Mis videos
-    </Link>
+        {showExpand ? (
+        <button
+          type="button"
+          onClick={() => onToggleExpand(folder.id)}
+          className="flex h-9 w-6 shrink-0 items-center justify-center rounded text-[var(--muted)] hover:bg-[var(--hover)] hover:text-[var(--foreground)]"
+          aria-label={isExpanded ? "Contraer" : "Expandir"}
+          aria-expanded={isExpanded}
+        >
+          {isLoading ? (
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent" />
+          ) : (
+            <svg
+              className={`h-4 w-4 shrink-0 transition-transform ${isExpanded ? "rotate-90" : ""}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          )}
+        </button>
+        ) : (
+          <span className="w-6 shrink-0" aria-hidden />
+        )}
+        <Link
+          href={`/?folder=${encodeURIComponent(folder.id)}`}
+          onClick={onNavigate}
+          className={linkClass(currentFolderId === folder.id)}
+        >
+          {FOLDER_ICON}
+          <span className="truncate">{folder.name}</span>
+        </Link>
+      </div>
+      {isExpanded && children && children.length > 0 && (
+        <div className="flex flex-col gap-0.5">
+          {children.map((child) => (
+            <FolderTreeItem
+              key={child.id}
+              folder={child}
+              depth={depth + 1}
+              currentFolderId={currentFolderId}
+              expandedIds={expandedIds}
+              childrenMap={childrenMap}
+              loadingIds={loadingIds}
+              onToggleExpand={onToggleExpand}
+              onNavigate={onNavigate}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
-export function Sidebar({ user }: SidebarProps) {
+function NavContent({
+  rootFolders,
+  currentFolderId,
+  expandedIds,
+  childrenMap,
+  loadingIds,
+  onLoadChildren,
+  onToggleExpand,
+  onNavigate,
+}: {
+  rootFolders: DriveFolder[];
+  currentFolderId: string | null;
+  expandedIds: Set<string>;
+  childrenMap: Record<string, DriveFolder[]>;
+  loadingIds: Set<string>;
+  onLoadChildren: (parentId: string) => void;
+  onToggleExpand: (folderId: string) => void;
+  onNavigate?: () => void;
+}) {
+  const linkClass = (active: boolean) =>
+    `flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+      active
+        ? "bg-[var(--accent)]/15 text-[var(--accent)]"
+        : "text-[var(--foreground)] hover:bg-[var(--hover)]"
+    }`;
+
+  return (
+    <div className="space-y-0.5">
+      <Link href="/" onClick={onNavigate} className={linkClass(!currentFolderId)}>
+        <svg
+          className="h-5 w-5 shrink-0 text-[var(--muted)]"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+          />
+        </svg>
+        Todos
+      </Link>
+      {rootFolders.map((folder) => (
+        <FolderTreeItem
+          key={folder.id}
+          folder={folder}
+          depth={0}
+          currentFolderId={currentFolderId}
+          expandedIds={expandedIds}
+          childrenMap={childrenMap}
+          loadingIds={loadingIds}
+          onToggleExpand={onToggleExpand}
+          onNavigate={onNavigate}
+        />
+      ))}
+    </div>
+  );
+}
+
+export function Sidebar({ user, currentFolderId = null }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [rootFolders, setRootFolders] = useState<DriveFolder[]>([]);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [childrenMap, setChildrenMap] = useState<Record<string, DriveFolder[]>>({});
+  const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    fetch("/api/drive/folders")
+      .then((res) => (res.ok ? res.json() : { folders: [] }))
+      .then((data: { folders?: DriveFolder[] }) => setRootFolders(data.folders ?? []))
+      .catch(() => setRootFolders([]));
+  }, []);
+
+  const loadChildren = useCallback((parentId: string) => {
+    setLoadingIds((prev) => new Set(prev).add(parentId));
+    fetch(`/api/drive/folders?parentId=${encodeURIComponent(parentId)}`)
+      .then((res) => (res.ok ? res.json() : { folders: [] }))
+      .then((data: { folders?: DriveFolder[] }) => {
+        setChildrenMap((prev) => ({ ...prev, [parentId]: data.folders ?? [] }));
+        setExpandedIds((prev) => new Set(prev).add(parentId));
+      })
+      .catch(() => setChildrenMap((prev) => ({ ...prev, [parentId]: [] })))
+      .finally(() => setLoadingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(parentId);
+        return next;
+      }));
+  }, []);
+
+  const handleToggleExpand = useCallback((folderId: string) => {
+    if (expandedIds.has(folderId)) {
+      setExpandedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(folderId);
+        return next;
+      });
+      return;
+    }
+    if (childrenMap[folderId] === undefined) {
+      loadChildren(folderId);
+      return;
+    }
+    setExpandedIds((prev) => new Set(prev).add(folderId));
+  }, [expandedIds, childrenMap, loadChildren]);
 
   useEffect(() => {
     if (mobileOpen) {
@@ -102,7 +295,16 @@ export function Sidebar({ user }: SidebarProps) {
           </button>
         </div>
         <nav className="flex-1 overflow-auto p-3">
-          <NavContent onNavigate={() => setMobileOpen(false)} />
+          <NavContent
+            rootFolders={rootFolders}
+            currentFolderId={currentFolderId ?? null}
+            expandedIds={expandedIds}
+            childrenMap={childrenMap}
+            loadingIds={loadingIds}
+            onLoadChildren={loadChildren}
+            onToggleExpand={handleToggleExpand}
+            onNavigate={() => setMobileOpen(false)}
+          />
         </nav>
         {user && (
           <div className="border-t border-[var(--border)] p-3">
@@ -143,8 +345,16 @@ export function Sidebar({ user }: SidebarProps) {
           </div>
           <ThemeToggle />
         </div>
-        <nav className="flex-1 p-3">
-          <NavContent />
+        <nav className="flex-1 overflow-auto p-3">
+          <NavContent
+            rootFolders={rootFolders}
+            currentFolderId={currentFolderId ?? null}
+            expandedIds={expandedIds}
+            childrenMap={childrenMap}
+            loadingIds={loadingIds}
+            onLoadChildren={loadChildren}
+            onToggleExpand={handleToggleExpand}
+          />
         </nav>
         {user && (
           <div className="border-t border-[var(--border)] p-3">

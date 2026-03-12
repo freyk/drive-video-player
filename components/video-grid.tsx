@@ -4,13 +4,23 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { VideoCard, type DriveVideo } from "./video-card";
 
-export function VideoGrid() {
+interface VideoGridProps {
+  /** Si se indica, solo se muestran los videos de esta carpeta. */
+  folderId?: string;
+}
+
+export function VideoGrid({ folderId }: VideoGridProps) {
   const [videos, setVideos] = useState<DriveVideo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const url =
+    folderId != null && folderId !== ""
+      ? `/api/drive/videos?folderId=${encodeURIComponent(folderId)}`
+      : "/api/drive/videos";
+
   useEffect(() => {
-    fetch("/api/drive/videos")
+    fetch(url)
       .then((res) => {
         if (!res.ok) throw new Error("Error al cargar videos");
         return res.json();
@@ -24,7 +34,7 @@ export function VideoGrid() {
         setVideos([]);
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [url]);
 
   if (loading) {
     return (
@@ -44,7 +54,7 @@ export function VideoGrid() {
           <p className="font-medium">No se pudieron cargar los videos</p>
           <p className="mt-1 text-sm">{error}</p>
           <p className="mt-2 text-sm opacity-90">
-            Asegúrate de que GOOGLE_DRIVE_FOLDER_ID esté configurado y que la carpeta sea accesible con tu cuenta.
+            Asegúrate de que GOOGLE_DRIVE_FOLDER_ID o GOOGLE_DRIVE_FOLDERS esté configurado y que las carpetas sean accesibles con tu cuenta de servicio.
           </p>
         </div>
       </div>
@@ -70,9 +80,9 @@ export function VideoGrid() {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
       {videos.map((video) => (
-        <Link key={video.id} href={`/video/${video.id}`}>
+        <Link key={video.id} href={`/video/${video.id}`} className="block w-full">
           <VideoCard video={video} />
         </Link>
       ))}
