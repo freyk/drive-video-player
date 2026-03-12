@@ -49,7 +49,7 @@ export async function GET(request: Request) {
     const auth = getServiceAccountClient();
     const drive = google.drive({ version: "v3", auth });
 
-    const allFiles: Array<{
+    type DriveFile = {
       id: string;
       name: string;
       mimeType?: string | null;
@@ -58,7 +58,9 @@ export async function GET(request: Request) {
       thumbnailLink?: string;
       webContentLink?: string;
       folderId?: string;
-    }> = [];
+    };
+
+    const allFiles: DriveFile[] = [];
 
     for (const folderId of folderIdsToQuery) {
       const { data } = await drive.files.list({
@@ -68,16 +70,22 @@ export async function GET(request: Request) {
         pageSize: 100,
       });
 
-      const files = (data.files || []).map((f) => ({
-        id: f.id,
-        name: f.name,
-        mimeType: f.mimeType,
-        size: f.size,
-        createdTime: f.createdTime,
-        thumbnailLink: f.thumbnailLink,
-        webContentLink: f.webContentLink,
-        folderId,
-      }));
+      const rawFiles = (data.files || []).filter(
+        (f): f is typeof f & { id: string; name: string } =>
+          typeof f.id === "string" && typeof f.name === "string"
+      );
+      const files = rawFiles.map(
+        (f): DriveFile => ({
+          id: f.id,
+          name: f.name,
+          mimeType: f.mimeType ?? undefined,
+          size: f.size ?? undefined,
+          createdTime: f.createdTime ?? undefined,
+          thumbnailLink: f.thumbnailLink ?? undefined,
+          webContentLink: f.webContentLink ?? undefined,
+          folderId,
+        })
+      );
       allFiles.push(...files);
     }
 
