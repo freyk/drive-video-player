@@ -28,12 +28,12 @@ export default async function VideoPage({
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="flex-1 overflow-auto p-8">
+      <main className="flex-1 overflow-auto pt-[calc(3.5rem+env(safe-area-inset-top,0px))] px-4 pb-8 sm:px-6 lg:pt-0 lg:p-8">
         <div className="mx-auto max-w-4xl">
-          <div className="mb-4 flex flex-wrap items-center gap-3">
+          <div className="mb-4 flex flex-wrap items-center gap-2 sm:gap-3">
             <Link
               href="/"
-              className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[var(--muted)] transition hover:bg-[var(--hover)] hover:text-[var(--foreground)]"
+              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[var(--muted)] transition hover:bg-[var(--hover)] hover:text-[var(--foreground)] sm:min-h-0 sm:min-w-0 sm:justify-start"
             >
               <svg
                 className="h-4 w-4"
@@ -52,7 +52,7 @@ export default async function VideoPage({
             </Link>
             <ShareButton videoId={id} videoName={video.name} />
           </div>
-          <h1 className="mb-6 truncate text-2xl font-bold text-[var(--foreground)]">
+          <h1 className="mb-4 truncate text-xl font-bold text-[var(--foreground)] sm:mb-6 sm:text-2xl">
             {video.name}
           </h1>
           <VideoPlayer

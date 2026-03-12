@@ -52,7 +52,7 @@ export function ThemeToggle() {
       type="button"
       onClick={toggle}
       aria-label={theme === "dark" ? "Usar tema claro" : "Usar tema oscuro"}
-      className="rounded-lg p-2 text-[var(--muted)] hover:bg-[var(--hover)] hover:text-[var(--foreground)] transition-colors"
+      className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 text-[var(--muted)] hover:bg-[var(--hover)] hover:text-[var(--foreground)] transition-colors"
       title={theme === "dark" ? "Tema claro" : "Tema oscuro"}
     >
       {theme === "dark" ? (

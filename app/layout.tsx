@@ -17,6 +17,12 @@ export const metadata: Metadata = {
   description: "Reproduce videos de tu carpeta de Google Drive",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{

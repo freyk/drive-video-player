@@ -31,7 +31,7 @@ export function ShareButton({ videoId, videoName }: ShareButtonProps) {
     <button
       type="button"
       onClick={handleShare}
-      className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--card-bg)] px-3 py-2 text-sm font-medium text-[var(--foreground)] transition hover:bg-[var(--hover)]"
+      className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--card-bg)] px-3 py-2 text-sm font-medium text-[var(--foreground)] transition hover:bg-[var(--hover)] sm:min-h-0 sm:min-w-0 sm:justify-start"
     >
       <svg
         className="h-4 w-4"

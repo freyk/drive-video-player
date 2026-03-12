@@ -57,8 +57,8 @@ export function VideoCard({ video }: VideoCardProps) {
           </span>
         </div>
       </div>
-      <div className="flex flex-col gap-0.5 p-4">
-        <h3 className="line-clamp-2 font-medium text-[var(--foreground)] group-hover:text-[var(--accent)]">
+      <div className="flex flex-col gap-0.5 p-3 sm:p-4">
+        <h3 className="line-clamp-2 font-medium text-[var(--foreground)] group-hover:text-[var(--accent)] text-sm sm:text-base">
           {video.name}
         </h3>
         {date && (
