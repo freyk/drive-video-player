@@ -6,6 +6,55 @@ import Image from "next/image";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
 
+const SIDEBAR_STORAGE_KEY = "video-player-sidebar-state";
+
+function loadSidebarState(): {
+  expandedIds: Set<string>;
+  childrenMap: Record<string, DriveFolder[]>;
+} | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(SIDEBAR_STORAGE_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw) as {
+      expandedIds?: string[];
+      childrenMap?: Record<string, { id: string; name: string }[]>;
+    };
+    const expandedIds = Array.isArray(data.expandedIds)
+      ? new Set(data.expandedIds)
+      : new Set<string>();
+    const childrenMap: Record<string, DriveFolder[]> = {};
+    if (data.childrenMap && typeof data.childrenMap === "object") {
+      for (const [parentId, children] of Object.entries(data.childrenMap)) {
+        if (Array.isArray(children)) {
+          childrenMap[parentId] = children.map((c) => ({ id: c.id, name: c.name }));
+        }
+      }
+    }
+    return { expandedIds, childrenMap };
+  } catch {
+    return null;
+  }
+}
+
+function saveSidebarState(
+  expandedIds: Set<string>,
+  childrenMap: Record<string, DriveFolder[]>
+) {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(
+      SIDEBAR_STORAGE_KEY,
+      JSON.stringify({
+        expandedIds: Array.from(expandedIds),
+        childrenMap,
+      })
+    );
+  } catch {
+    // ignore
+  }
+}
+
 export interface DriveFolder {
   id: string;
   name: string;
@@ -41,6 +90,7 @@ function FolderTreeItem({
   childrenMap,
   loadingIds,
   onToggleExpand,
+  onExpandOnNameClick,
   onNavigate,
 }: {
   folder: DriveFolder;
@@ -50,12 +100,18 @@ function FolderTreeItem({
   childrenMap: Record<string, DriveFolder[]>;
   loadingIds: Set<string>;
   onToggleExpand: (folderId: string) => void;
+  onExpandOnNameClick?: (folderId: string) => void;
   onNavigate?: () => void;
 }) {
   const isExpanded = expandedIds.has(folder.id);
   const children = childrenMap[folder.id];
   const isLoading = loadingIds.has(folder.id);
   const showExpand = children === undefined || children.length > 0;
+
+  const handleNameClick = () => {
+    onExpandOnNameClick?.(folder.id);
+    onNavigate?.();
+  };
 
   const linkClass = (active: boolean) =>
     `flex min-h-[44px] flex-1 min-w-0 items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium transition-colors ${
@@ -96,7 +152,7 @@ function FolderTreeItem({
         )}
         <Link
           href={`/?folder=${encodeURIComponent(folder.id)}`}
-          onClick={onNavigate}
+          onClick={handleNameClick}
           className={linkClass(currentFolderId === folder.id)}
         >
           {FOLDER_ICON}
@@ -115,6 +171,7 @@ function FolderTreeItem({
               childrenMap={childrenMap}
               loadingIds={loadingIds}
               onToggleExpand={onToggleExpand}
+              onExpandOnNameClick={onExpandOnNameClick}
               onNavigate={onNavigate}
             />
           ))}
@@ -132,6 +189,7 @@ function NavContent({
   loadingIds,
   onLoadChildren,
   onToggleExpand,
+  onExpandOnNameClick,
   onNavigate,
 }: {
   rootFolders: DriveFolder[];
@@ -141,6 +199,7 @@ function NavContent({
   loadingIds: Set<string>;
   onLoadChildren: (parentId: string) => void;
   onToggleExpand: (folderId: string) => void;
+  onExpandOnNameClick?: (folderId: string) => void;
   onNavigate?: () => void;
 }) {
   const linkClass = (active: boolean) =>
@@ -178,6 +237,7 @@ function NavContent({
           childrenMap={childrenMap}
           loadingIds={loadingIds}
           onToggleExpand={onToggleExpand}
+          onExpandOnNameClick={onExpandOnNameClick}
           onNavigate={onNavigate}
         />
       ))}
@@ -188,9 +248,19 @@ function NavContent({
 export function Sidebar({ user, currentFolderId = null }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [rootFolders, setRootFolders] = useState<DriveFolder[]>([]);
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-  const [childrenMap, setChildrenMap] = useState<Record<string, DriveFolder[]>>({});
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(() => {
+    const saved = loadSidebarState();
+    return saved?.expandedIds ?? new Set();
+  });
+  const [childrenMap, setChildrenMap] = useState<Record<string, DriveFolder[]>>(() => {
+    const saved = loadSidebarState();
+    return saved?.childrenMap ?? {};
+  });
   const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    saveSidebarState(expandedIds, childrenMap);
+  }, [expandedIds, childrenMap]);
 
   useEffect(() => {
     fetch("/api/drive/folders")
@@ -224,6 +294,16 @@ export function Sidebar({ user, currentFolderId = null }: SidebarProps) {
       });
       return;
     }
+    if (childrenMap[folderId] === undefined) {
+      loadChildren(folderId);
+      return;
+    }
+    setExpandedIds((prev) => new Set(prev).add(folderId));
+  }, [expandedIds, childrenMap, loadChildren]);
+
+  /** Expand folder when clicking its name (e.g. navigate + show children). Never collapses. */
+  const handleExpandOnNameClick = useCallback((folderId: string) => {
+    if (expandedIds.has(folderId)) return;
     if (childrenMap[folderId] === undefined) {
       loadChildren(folderId);
       return;
@@ -303,6 +383,7 @@ export function Sidebar({ user, currentFolderId = null }: SidebarProps) {
             loadingIds={loadingIds}
             onLoadChildren={loadChildren}
             onToggleExpand={handleToggleExpand}
+            onExpandOnNameClick={handleExpandOnNameClick}
             onNavigate={() => setMobileOpen(false)}
           />
         </nav>
@@ -354,6 +435,7 @@ export function Sidebar({ user, currentFolderId = null }: SidebarProps) {
             loadingIds={loadingIds}
             onLoadChildren={loadChildren}
             onToggleExpand={handleToggleExpand}
+            onExpandOnNameClick={handleExpandOnNameClick}
           />
         </nav>
         {user && (

@@ -54,7 +54,9 @@ export function VideoGrid({ folderId }: VideoGridProps) {
           <p className="font-medium">No se pudieron cargar los videos</p>
           <p className="mt-1 text-sm">{error}</p>
           <p className="mt-2 text-sm opacity-90">
-            Asegúrate de que GOOGLE_DRIVE_FOLDER_ID o GOOGLE_DRIVE_FOLDERS esté configurado y que las carpetas sean accesibles con tu cuenta de servicio.
+            Asegúrate de que GOOGLE_DRIVE_FOLDER_ID o GOOGLE_DRIVE_FOLDERS esté
+            configurado y que las carpetas sean accesibles con tu cuenta de
+            servicio.
           </p>
         </div>
       </div>
@@ -72,9 +74,6 @@ export function VideoGrid({ folderId }: VideoGridProps) {
         <h3 className="text-lg font-medium text-[var(--foreground)]">
           No hay videos en esta carpeta
         </h3>
-        <p className="max-w-sm text-sm text-[var(--muted)]">
-          Sube videos a la carpeta de Google Drive configurada o revisa el ID de carpeta en las variables de entorno.
-        </p>
       </div>
     );
   }
@@ -82,7 +81,11 @@ export function VideoGrid({ folderId }: VideoGridProps) {
   return (
     <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
       {videos.map((video) => (
-        <Link key={video.id} href={`/video/${video.id}`} className="block w-full">
+        <Link
+          key={video.id}
+          href={`/video/${video.id}`}
+          className="block w-full"
+        >
           <VideoCard video={video} />
         </Link>
       ))}
