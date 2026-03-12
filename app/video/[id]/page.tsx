@@ -4,9 +4,12 @@ import { notFound } from "next/navigation";
 import { ShareButton } from "@/components/share-button";
 import { Sidebar } from "@/components/sidebar";
 import { VideoPlayer } from "@/components/video-player";
-import { getVideoMetadata } from "@/lib/drive";
+import { getDriveFoldersConfig, getFolderInfo, getVideoMetadata } from "@/lib/drive";
 
-type Props = { params: Promise<{ id: string }> };
+type Props = {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ folder?: string }>;
+};
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
@@ -17,22 +20,40 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function VideoPage({
   params,
+  searchParams,
 }: Props) {
   const { id } = await params;
-  const video = await getVideoMetadata(id);
+  const { folder: folderId } = await searchParams;
+  const [video, backFolderName] = await Promise.all([
+    getVideoMetadata(id),
+    folderId
+      ? (async () => {
+          const rootFolders = getDriveFoldersConfig();
+          const folder =
+            rootFolders.find((f) => f.id === folderId) ??
+            (await getFolderInfo(folderId));
+          return folder?.name ?? null;
+        })()
+      : Promise.resolve(null),
+  ]);
 
   if (!video) {
     notFound();
   }
 
+  const backHref = folderId ? `/?folder=${encodeURIComponent(folderId)}` : "/";
+  const backLabel = backFolderName
+    ? `Volver a ${backFolderName}`
+    : "Volver a mis videos";
+
   return (
     <div className="flex min-h-screen">
-      <Sidebar />
+      <Sidebar currentFolderId={folderId ?? null} />
       <main className="flex-1 overflow-auto pt-[calc(3.5rem+env(safe-area-inset-top,0px))] px-4 pb-8 sm:px-6 lg:pt-0 lg:p-8">
         <div className="mx-auto max-w-4xl">
           <div className="mb-4 flex flex-wrap items-center gap-2 sm:gap-3">
             <Link
-              href="/"
+              href={backHref}
               className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[var(--muted)] transition hover:bg-[var(--hover)] hover:text-[var(--foreground)] sm:min-h-0 sm:min-w-0 sm:justify-start"
             >
               <svg
@@ -48,7 +69,7 @@ export default async function VideoPage({
                   d="M15 19l-7-7 7-7"
                 />
               </svg>
-              Volver a mis videos
+              {backLabel}
             </Link>
             <ShareButton videoId={id} videoName={video.name} />
           </div>

@@ -83,7 +83,11 @@ export function VideoGrid({ folderId }: VideoGridProps) {
       {videos.map((video) => (
         <Link
           key={video.id}
-          href={`/video/${video.id}`}
+          href={
+            folderId
+              ? `/video/${video.id}?folder=${encodeURIComponent(folderId)}`
+              : `/video/${video.id}`
+          }
           className="block w-full"
         >
           <VideoCard video={video} />
