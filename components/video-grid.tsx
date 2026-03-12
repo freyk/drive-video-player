@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { VideoCard, type DriveVideo } from "./video-card";
 
 interface VideoGridProps {
-  /** Si se indica, solo se muestran los videos de esta carpeta. */
+  /** If specified, only shows videos in this folder. */
   folderId?: string;
 }
 
@@ -22,7 +22,7 @@ export function VideoGrid({ folderId }: VideoGridProps) {
   useEffect(() => {
     fetch(url)
       .then((res) => {
-        if (!res.ok) throw new Error("Error al cargar videos");
+        if (!res.ok) throw new Error("Error loading videos");
         return res.json();
       })
       .then((data: { files: DriveVideo[] }) => {
@@ -30,7 +30,7 @@ export function VideoGrid({ folderId }: VideoGridProps) {
         setError(null);
       })
       .catch((err) => {
-        setError(err.message ?? "Error de conexión");
+        setError(err.message ?? "Connection error");
         setVideos([]);
       })
       .finally(() => setLoading(false));
@@ -41,7 +41,7 @@ export function VideoGrid({ folderId }: VideoGridProps) {
       <div className="flex flex-1 items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="h-10 w-10 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent" />
-          <p className="text-sm text-[var(--muted)]">Cargando videos...</p>
+          <p className="text-sm text-[var(--muted)]">Loading videos...</p>
         </div>
       </div>
     );
@@ -51,12 +51,12 @@ export function VideoGrid({ folderId }: VideoGridProps) {
     return (
       <div className="flex flex-1 items-center justify-center">
         <div className="rounded-xl border border-red-200 bg-red-50 px-6 py-4 text-red-800 dark:border-red-800 dark:bg-red-950/30 dark:text-red-200">
-          <p className="font-medium">No se pudieron cargar los videos</p>
+          <p className="font-medium">Could not load videos</p>
           <p className="mt-1 text-sm">{error}</p>
           <p className="mt-2 text-sm opacity-90">
-            Asegúrate de que GOOGLE_DRIVE_FOLDER_ID o GOOGLE_DRIVE_FOLDERS esté
-            configurado y que las carpetas sean accesibles con tu cuenta de
-            servicio.
+            Make sure GOOGLE_DRIVE_FOLDER_ID or GOOGLE_DRIVE_FOLDERS is
+            configured and that the folders are accessible with your service
+            account.
           </p>
         </div>
       </div>
@@ -72,7 +72,7 @@ export function VideoGrid({ folderId }: VideoGridProps) {
           </svg>
         </div>
         <h3 className="text-lg font-medium text-[var(--foreground)]">
-          No hay videos en esta carpeta
+          No videos in this folder
         </h3>
       </div>
     );

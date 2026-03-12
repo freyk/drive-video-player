@@ -20,7 +20,7 @@ export function VideoPlayer({ id, mimeType, name }: VideoPlayerProps) {
         aria-label={name}
       >
         <source src={streamUrl} type={mimeType ?? "video/mp4"} />
-        Tu navegador no soporta el elemento video.
+        Your browser does not support the video element.
       </video>
     </div>
   );

@@ -7,7 +7,7 @@ export async function GET(request: Request) {
 
   if (!id) {
     return NextResponse.json(
-      { error: "Falta parámetro id" },
+      { error: "Missing id parameter" },
       { status: 400 }
     );
   }
@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     const video = await getVideoMetadata(id);
     if (!video) {
       return NextResponse.json(
-        { error: "Video no encontrado" },
+        { error: "Video not found" },
         { status: 404 }
       );
     }
@@ -24,7 +24,7 @@ export async function GET(request: Request) {
   } catch (err) {
     console.error("Drive API error (video):", err);
     return NextResponse.json(
-      { error: "Error al obtener el video" },
+      { error: "Error fetching video" },
       { status: 500 }
     );
   }

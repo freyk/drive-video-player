@@ -39,7 +39,7 @@ export function ThemeToggle() {
     return (
       <button
         type="button"
-        aria-label="Cambiar tema"
+        aria-label="Toggle theme"
         className="rounded-lg p-2 text-[var(--muted)] hover:bg-[var(--hover)] hover:text-[var(--foreground)]"
       >
         <span className="h-5 w-5" />
@@ -51,9 +51,9 @@ export function ThemeToggle() {
     <button
       type="button"
       onClick={toggle}
-      aria-label={theme === "dark" ? "Usar tema claro" : "Usar tema oscuro"}
+      aria-label={theme === "dark" ? "Use light theme" : "Use dark theme"}
       className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 text-[var(--muted)] hover:bg-[var(--hover)] hover:text-[var(--foreground)] transition-colors"
-      title={theme === "dark" ? "Tema claro" : "Tema oscuro"}
+      title={theme === "dark" ? "Light theme" : "Dark theme"}
     >
       {theme === "dark" ? (
         <svg

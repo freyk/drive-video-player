@@ -19,7 +19,7 @@ interface VideoCardProps {
 export function VideoCard({ video }: VideoCardProps) {
   const [thumbError, setThumbError] = useState(false);
   const date = video.createdTime
-    ? new Date(video.createdTime).toLocaleDateString("es", {
+    ? new Date(video.createdTime).toLocaleDateString("en-US", {
         day: "numeric",
         month: "short",
         year: "numeric",
@@ -27,9 +27,7 @@ export function VideoCard({ video }: VideoCardProps) {
     : null;
 
   return (
-    <div
-      className="group flex w-full flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card-bg)] text-left shadow-sm transition hover:border-[var(--accent)]/40 hover:shadow-md focus-within:ring-2 focus-within:ring-[var(--accent)]/50"
-    >
+    <div className="group flex w-full flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card-bg)] text-left shadow-sm transition hover:border-[var(--accent)]/40 hover:shadow-md focus-within:ring-2 focus-within:ring-[var(--accent)]/50">
       <div className="relative aspect-video w-full shrink-0 overflow-hidden bg-[var(--muted)]/20">
         {!thumbError ? (
           <img
@@ -40,18 +38,18 @@ export function VideoCard({ video }: VideoCardProps) {
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-[var(--muted)]">
-            <svg
-              className="h-12 w-12"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="h-12 w-12" fill="currentColor" viewBox="0 0 24 24">
               <path d="M8 5v14l11-7z" />
             </svg>
           </div>
         )}
         <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition group-hover:bg-black/30 group-hover:opacity-100">
           <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-[var(--accent)] shadow-lg">
-            <svg className="ml-1 h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="ml-1 h-6 w-6"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path d="M8 5v14l11-7z" />
             </svg>
           </span>
@@ -61,9 +59,7 @@ export function VideoCard({ video }: VideoCardProps) {
         <h3 className="line-clamp-2 font-medium text-[var(--foreground)] group-hover:text-[var(--accent)] text-sm sm:text-base">
           {video.name}
         </h3>
-        {date && (
-          <p className="text-sm text-[var(--muted)]">{date}</p>
-        )}
+        {date && <p className="text-sm text-[var(--muted)]">{date}</p>}
       </div>
     </div>
   );

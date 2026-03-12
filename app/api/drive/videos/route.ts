@@ -18,7 +18,7 @@ function getServiceAccountClient() {
   );
 
   if (!clientEmail || !privateKey) {
-    throw new Error("Credenciales de servicio de Google no configuradas");
+    throw new Error("Google service account credentials not configured");
   }
 
   return new google.auth.GoogleAuth({
@@ -34,7 +34,7 @@ export async function GET(request: Request) {
   const folders = getDriveFoldersConfig();
   if (folders.length === 0) {
     return NextResponse.json(
-      { error: "No hay carpetas configuradas (GOOGLE_DRIVE_FOLDER_ID o GOOGLE_DRIVE_FOLDERS)" },
+      { error: "No folders configured (GOOGLE_DRIVE_FOLDER_ID or GOOGLE_DRIVE_FOLDERS)" },
       { status: 500 }
     );
   }
@@ -101,7 +101,7 @@ export async function GET(request: Request) {
   } catch (err) {
     console.error("Drive API error:", err);
     return NextResponse.json(
-      { error: "Error al listar videos de Drive" },
+      { error: "Error listing Drive videos" },
       { status: 500 }
     );
   }

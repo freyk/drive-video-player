@@ -13,7 +13,7 @@ export async function GET(request: Request) {
   const folders = getDriveFoldersConfig();
   if (folders.length === 0) {
     return NextResponse.json(
-      { error: "No hay carpetas configuradas (GOOGLE_DRIVE_FOLDER_ID o GOOGLE_DRIVE_FOLDERS)" },
+      { error: "No folders configured (GOOGLE_DRIVE_FOLDER_ID or GOOGLE_DRIVE_FOLDERS)" },
       { status: 500 }
     );
   }

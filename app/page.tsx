@@ -17,7 +17,7 @@ export default async function Home({
     : null;
   const pageTitle =
     currentFolder?.name ??
-    (folderId ? "Videos" : rootFolders.length > 1 ? "Todos los videos" : "Mis videos");
+    (folderId ? "Videos" : rootFolders.length > 1 ? "All videos" : "My videos");
 
   return (
     <div className="flex min-h-screen">

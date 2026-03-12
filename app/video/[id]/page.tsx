@@ -18,7 +18,7 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const video = await getVideoMetadata(id);
-  if (!video) return { title: "Video no encontrado" };
+  if (!video) return { title: "Video not found" };
   return { title: `${video.name} | Videos` };
 }
 
@@ -44,8 +44,8 @@ export default async function VideoPage({ params, searchParams }: Props) {
 
   const backHref = folderId ? `/?folder=${encodeURIComponent(folderId)}` : "/";
   const backLabel = backFolderName
-    ? `Volver a ${backFolderName}`
-    : "Volver a mis videos";
+    ? `Back to ${backFolderName}`
+    : "Back to my videos";
 
   return (
     <div className="flex min-h-screen">

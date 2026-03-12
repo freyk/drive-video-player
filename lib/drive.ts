@@ -5,7 +5,7 @@ export interface DriveFolderConfig {
   name: string;
 }
 
-/** Lista de carpetas permitidas desde env (orden determina el orden en la UI). */
+/** List of allowed folders from env (order determines the order in the UI). */
 export function getDriveFoldersConfig(): DriveFolderConfig[] {
   const foldersJson = process.env.GOOGLE_DRIVE_FOLDERS;
   if (foldersJson) {
@@ -15,11 +15,14 @@ export function getDriveFoldersConfig(): DriveFolderConfig[] {
         return parsed
           .filter(
             (f): f is { id: string; name?: string } =>
-              f != null && typeof (f as { id?: string }).id === "string"
+              f != null && typeof (f as { id?: string }).id === "string",
           )
           .map((f) => ({
             id: f.id,
-            name: typeof f.name === "string" && f.name.trim() ? f.name.trim() : f.id,
+            name:
+              typeof f.name === "string" && f.name.trim()
+                ? f.name.trim()
+                : f.id,
           }));
       }
     } catch {
@@ -28,7 +31,7 @@ export function getDriveFoldersConfig(): DriveFolderConfig[] {
   }
   const singleId = process.env.GOOGLE_DRIVE_FOLDER_ID;
   if (singleId) {
-    return [{ id: singleId, name: "Mis videos" }];
+    return [{ id: singleId, name: "My videos" }];
   }
   return [];
 }
@@ -37,11 +40,11 @@ function getServiceAccountClient() {
   const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_CLIENT_EMAIL;
   const privateKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(
     /\\n/g,
-    "\n"
+    "\n",
   );
 
   if (!clientEmail || !privateKey) {
-    throw new Error("Credenciales de servicio de Google no configuradas");
+    throw new Error("Google service account credentials not configured");
   }
 
   return new google.auth.GoogleAuth({
@@ -63,9 +66,9 @@ export interface VideoMetadata {
   webContentLink?: string;
 }
 
-/** Recorre recursivamente y devuelve los IDs de la carpeta y todas sus subcarpetas. */
+/** Recursively traverses and returns the IDs of the folder and all its subfolders. */
 export async function getAllFolderIdsRecursive(
-  rootIds: string[]
+  rootIds: string[],
 ): Promise<string[]> {
   const result = new Set<string>(rootIds);
 
@@ -85,9 +88,9 @@ export async function getAllFolderIdsRecursive(
   return Array.from(result);
 }
 
-/** Lista subcarpetas directas de una carpeta (para árbol en el sidebar). */
+/** Lists direct subfolders of a folder (for the sidebar tree). */
 export async function listSubfolders(
-  parentId: string
+  parentId: string,
 ): Promise<DriveFolderConfig[]> {
   try {
     const auth = getServiceAccountClient();
@@ -109,9 +112,9 @@ export async function listSubfolders(
   }
 }
 
-/** Devuelve nombre (y id) de una carpeta por ID (para títulos cuando es subcarpeta). */
+/** Returns the name (and id) of a folder by ID (for titles when it's a subfolder). */
 export async function getFolderInfo(
-  id: string
+  id: string,
 ): Promise<DriveFolderConfig | null> {
   try {
     const auth = getServiceAccountClient();
@@ -133,7 +136,7 @@ export async function getFolderInfo(
 }
 
 export async function getVideoMetadata(
-  id: string
+  id: string,
 ): Promise<VideoMetadata | null> {
   try {
     const auth = getServiceAccountClient();
@@ -141,7 +144,8 @@ export async function getVideoMetadata(
 
     const { data } = await drive.files.get({
       fileId: id,
-      fields: "id, name, mimeType, size, createdTime, thumbnailLink, webContentLink",
+      fields:
+        "id, name, mimeType, size, createdTime, thumbnailLink, webContentLink",
     });
 
     return {
