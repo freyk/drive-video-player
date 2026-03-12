@@ -12,7 +12,12 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const baseUrl =
+  process.env.NEXT_PUBLIC_APP_URL ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined);
+
 export const metadata: Metadata = {
+  metadataBase: baseUrl ? new URL(baseUrl) : undefined,
   title: "Videos | Google Drive",
   description: "Play videos from your Google Drive folder",
 };

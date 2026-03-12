@@ -19,7 +19,28 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const video = await getVideoMetadata(id);
   if (!video) return { title: "Video not found" };
-  return { title: `${video.name} | Videos` };
+
+  const title = `${video.name} | Videos`;
+  const description = `Watch "${video.name}"`;
+  const thumbnailUrl = `/api/drive/thumbnail?id=${id}`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title: video.name,
+      description,
+      url: `/video/${id}`,
+      type: "website",
+      images: [{ url: thumbnailUrl, width: 1200, height: 630, alt: video.name }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: video.name,
+      description,
+      images: [thumbnailUrl],
+    },
+  };
 }
 
 export default async function VideoPage({ params, searchParams }: Props) {
